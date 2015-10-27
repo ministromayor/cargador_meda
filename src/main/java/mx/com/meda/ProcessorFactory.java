@@ -15,7 +15,8 @@ public class ProcessorFactory {
 		Processor procesador = null;
 		try {
 			SFTPClient sftp = new SFTPClient(peerName);
-			DataWrapper dw = new DataWrapper();
+			DataWrapper dw = new DataWrapper(peerName);
+			dw.seleccionarPrueba();
 			if( peerName.equalsIgnoreCase("hitss") ) {
 				procesador = new HitssProcessor(sftp, dw);
 			}

@@ -25,5 +25,8 @@ public class SanbornsProcessor implements Processor {
 		return true;
 	}
 
+	public void release() {
+	}
+
 
 }

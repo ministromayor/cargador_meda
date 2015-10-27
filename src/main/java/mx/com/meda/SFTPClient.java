@@ -93,13 +93,9 @@ public class SFTPClient {
 		};
 		cfg_known_hosts = settings.getProperty(global_properties_keys[0]);
 
-
 		for(String propiedad : peer_properties_keys) {
 			log.debug("propiedad "+propiedad+": "+settings.getProperty(propiedad));
 		}
-
-
-
 	}
 	
 	public boolean conectar() throws JSchException {

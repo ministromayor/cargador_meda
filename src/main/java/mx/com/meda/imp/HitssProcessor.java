@@ -46,5 +46,9 @@ public class HitssProcessor implements Processor {
 		return true;
 	}
 
+	public void release() {
+		dw.release();
+	}
+
 
 }
