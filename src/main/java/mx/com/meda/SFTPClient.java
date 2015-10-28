@@ -40,9 +40,9 @@ public class SFTPClient {
 	private Session session = null;
 	private ChannelSftp sftp = null;
 
-	public SFTPClient(String peer) throws JSchException {
+	public SFTPClient(Socio peer) throws JSchException {
 		try {
-			loadConfiguration(peer);
+			loadConfiguration(peer.getNombre());
 		}catch(IOException ex) {
 			log.error("No se pudo cargar el archivo de configuración, se utilizarán los ajustes por defecto.");
 		}
@@ -111,6 +111,11 @@ public class SFTPClient {
 		return (session.isConnected() & sftp.isConnected());
 	}
 
+
+	public String lastAddedInFileName() throws SftpException {
+		return lastAddedFileName(cfg_in_dir);
+	}
+
 	private String lastAddedFileName(String rootRelativeDir) throws SftpException {
 		String fileName = "";
 		Date recentDate = new Date(0L);
@@ -144,7 +149,7 @@ public class SFTPClient {
 
 	public InputStream readLastOutFile() throws SftpException {
 		InputStream is = null;
-		String lf = this.lastAddedFileName(cfg_in_dir);
+		String lf = this.lastAddedFileName(cfg_out_dir);
 		log.debug("Se entregará un flujo de entrada para el archivo "+lf);
 		is = sftp.get(lf);
 		return is;

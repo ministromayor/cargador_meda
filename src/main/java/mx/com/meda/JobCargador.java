@@ -21,15 +21,18 @@ public class JobCargador {
 	Logger log = Logger.getLogger(this.getClass());
 
 	@Schedule(second="*/30", minute="*", hour="*", persistent=false)
-	public void trabajo() {
-		Processor proc = ProcessorFactory.getProcessorInstance("HITSS");
+	public void entradaHITSS() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS);
 		proc.procesarEntrada();
+		proc.release();
 	}
 
-	@Schedule(second="0", minute="*/30", hour="*/4", persistent=false)
-	public void tarea2() {
-		Processor proc = ProcessorFactory.getProcessorInstance("HITSS");
+	//@Schedule(second="0", minute="*/30", hour="*/4", persistent=false)
+	//@Schedule(second="*/30", minute="*", hour="*", persistent=false)
+	public void salidaHITSS() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS);
 		proc.procesarEntrada();
+		proc.release();
 	}
 
 

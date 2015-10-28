@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.Types;
 
 import java.util.Properties;
 
@@ -19,9 +21,17 @@ import javax.sql.DataSource;
 public class DataWrapper {
 
 	Logger log = Logger.getLogger(this.getClass());
+
 	private DataSource ds = null;
 	private Connection con = null;
 	private String peerId = null;
+	private Socio peer = null;
+
+
+	public DataWrapper(Socio peer) {
+		this(peer.getNombre());
+		this.peer = peer;
+	}
 
 
 	public DataWrapper(String peerId) {
@@ -89,7 +99,7 @@ public class DataWrapper {
 					sb.append(" | ");
 					sb.append(rs.getString(12));
 					sb.append(" | ");
-					log.info(sb.toString());
+					log.debug(sb.toString());
 				}
 			}
 		} catch (SQLException ex) {
@@ -101,7 +111,46 @@ public class DataWrapper {
 		}
 	}
 
-	public void insertarRegistro(String[] values) {
+	public void cargarLinea(int tipo_de_archivo, String[] values) {
+		StringBuilder sb = new StringBuilder();
+		try {
+			sb.append("insert into CrgArchivos values(?,?,");
+			for(int i = 0; i < (values.length)-1; i++) {
+				sb.append("?,");
+			}
+			sb.append("?);");
+
+			String ps_material = "insert into CrgArchivos values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			log.info("El material para la sentencia peparada es: "+ps_material);
+
+			PreparedStatement pstm = con.prepareStatement(ps_material);
+			//optimizar este segundo ciclo.
+			pstm.setInt(1, peer.getId());
+			pstm.setInt(2, tipo_de_archivo);
+			for(int i = 0; i < values.length; i++) {
+				pstm.setString(i+3, values[i]);
+				log.debug("Estableciendo el valor del campo: "+(i+3));
+			}
+			int nulls_offset = (values.length + 3);
+			for(int i = nulls_offset; i <= 14; i++) {
+				pstm.setNull(i, Types.VARCHAR);
+				log.debug("Estableciendo nulo el valor del campo: "+(i));
+			}
+			//optimizar utilizando addBatch()
+			pstm.executeUpdate();
+		} catch (SQLException ex) {
+			log.error("No se pudo insertar un registro.");
+			log.error(ex.getMessage());
+		}
+	}
+
+	public void performCommit() {
+		try {
+			con.commit();
+		} catch (SQLException ex) {
+			log.error("No se pudo hacer commit a la transacción.");
+			log.error(ex.getMessage());
+		}
 	}
 
 }
