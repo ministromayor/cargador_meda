@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.Types;
 
@@ -121,7 +122,7 @@ public class DataWrapper {
 			sb.append("?);");
 
 			String ps_material = "insert into CrgArchivos values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-			log.info("El material para la sentencia peparada es: "+ps_material);
+			log.debug("El material para la sentencia peparada es: "+ps_material);
 
 			PreparedStatement pstm = con.prepareStatement(ps_material);
 			//optimizar este segundo ciclo.
@@ -140,6 +141,29 @@ public class DataWrapper {
 			pstm.executeUpdate();
 		} catch (SQLException ex) {
 			log.error("No se pudo insertar un registro.");
+			log.error(ex.getMessage());
+		}
+	}
+
+	public void procArchivoCarga(int tipo_de_archivo, String nombre_de_archivo) {
+		try {
+			ResultSet rs = null;
+			CallableStatement cstmt = con.prepareCall(
+				"{call procArchivoCarga(?, ?, ?)}");
+			cstmt.setInt(1, tipo_de_archivo);
+			cstmt.setInt(2, peer.getId());
+			cstmt.setString(3, nombre_de_archivo);
+
+			rs = cstmt.executeQuery();
+			if(!rs.isBeforeFirst()) {
+				log.error("No hay registros en el retorno de la ejecución del sp: procArchivoCarga");;
+			} else {
+				while(rs.next()) {
+					log.info("Se ejecuto el sp: procArchivoCarga con los siguientes resultados - ERROR: "+rs.getInt(1)+" MSG: "+rs.getString(2));
+				}
+			}
+		} catch(SQLException ex) {
+			log.error("No se pudo invocar el sp: procArchivoCarga");
 			log.error(ex.getMessage());
 		}
 	}
