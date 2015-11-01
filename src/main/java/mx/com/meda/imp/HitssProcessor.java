@@ -25,66 +25,11 @@ import com.jcraft.jsch.JSchException;
 
 import mx.com.meda.Socio;
 
-public class HitssProcessor implements Processor {
-
-	Logger log = Logger.getLogger(this.getClass());
-	private SFTPClient cliente;
-	private DataWrapper dw;
-	Socio socio = Socio.HITSS;
-
-
-	private String altas_in_separador = "|";
-	private boolean altas_in_header = false;
-	private boolean altas_in_trailer = false;
-	private int altas_in_campos = 7;
-	private String altas_in_nombre = null;
-
-	//Variables de configuración para los archivos de salida.
-	private String altas_out_separador = "|";
-	private boolean altas_out_header = false;
-	private boolean altas_out_trailer = false;
-	private String altas_out_nombre = "PSF_RespuestaRHYYYYMMDDHHmm.acc";
-	
-
-
-	private final String MEDA_HITSS_PROPERTIES_FILENAME = this.socio.getNombre().toLowerCase()+".properties";
-
-	private void loadConfiguration() throws IOException {
-		Properties settings = new Properties();
-		settings.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(MEDA_HITSS_PROPERTIES_FILENAME));
-
-		altas_in_separador = settings.getProperty("altas.in.separador");
-		altas_in_header = new Boolean(settings.getProperty("altas.in.header")).booleanValue();
-		altas_in_trailer = new Boolean(settings.getProperty("altas.in.trailer")).booleanValue();
-		altas_in_campos = new Integer(settings.getProperty("altas.in.campos")).intValue();
-		altas_in_nombre = settings.getProperty("altas_in_nombre");
-
-		altas_out_separador = settings.getProperty("altas.out.separador");
-		altas_out_header = new Boolean(settings.getProperty("altas.out.header"));
-		altas_out_trailer = new Boolean(settings.getProperty("altas.out.trailer"));
-		altas_out_nombre = settings.getProperty("altas.out.nombre");
-
-	}
-	
-	public HitssProcessor(SFTPClient sftp, DataWrapper dw) throws IOException {
-		this.cliente = sftp;
-		this.dw = dw;
-	}
+public class HitssProcessor extends AliadoProcessor implements Processor {
 
 	public HitssProcessor() {
-		try {
-			loadConfiguration();
-			this.cliente = new SFTPClient(socio);
-			this.dw = new DataWrapper(socio);
-		} catch (JSchException ex ) {
-			log.error("Ocurrio un error al generar el cliente SFTP.");
-			log.debug(ex.getMessage());
-			//Manejar las excepciones futuras en el manejo de una clase instanciada con errores.
-		} catch (IOException ex) {
-			log.error("No se pudo cargar la configuración del módulo desde el archivo: "+MEDA_HITSS_PROPERTIES_FILENAME);
-			log.error(ex.getMessage());
-		}
-
+		super(Socio.HITSS);
+		log = Logger.getLogger(this.getClass());
 	}
 
 	public boolean procesarEntrada() {
@@ -145,10 +90,6 @@ public class HitssProcessor implements Processor {
 		} finally {
 			return true;
 		}
-	}
-
-	public void release() {
-		dw.release();
 	}
 
 }
