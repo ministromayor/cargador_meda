@@ -12,6 +12,14 @@ import java.util.StringTokenizer;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import java.util.TimeZone;
+import java.util.Date;
+import java.util.List;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+
 import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.JSchException;
 
@@ -31,6 +39,14 @@ public class HitssProcessor implements Processor {
 	private int altas_in_campos = 7;
 	private String altas_in_nombre = null;
 
+	//Variables de configuración para los archivos de salida.
+	private String altas_out_separador = "|";
+	private boolean altas_out_header = false;
+	private boolean altas_out_trailer = false;
+	private String altas_out_nombre = "PSF_RespuestaRHYYYYMMDDHHmm.acc";
+	
+
+
 	private final String MEDA_HITSS_PROPERTIES_FILENAME = this.socio.getNombre().toLowerCase()+".properties";
 
 	private void loadConfiguration() throws IOException {
@@ -42,10 +58,15 @@ public class HitssProcessor implements Processor {
 		altas_in_trailer = new Boolean(settings.getProperty("altas.in.trailer")).booleanValue();
 		altas_in_campos = new Integer(settings.getProperty("altas.in.campos")).intValue();
 		altas_in_nombre = settings.getProperty("altas_in_nombre");
+
+		altas_out_separador = settings.getProperty("altas.out.separador");
+		altas_out_header = new Boolean(settings.getProperty("altas.out.header"));
+		altas_out_trailer = new Boolean(settings.getProperty("altas.out.trailer"));
+		altas_out_nombre = settings.getProperty("altas.out.nombre");
+
 	}
 	
 	public HitssProcessor(SFTPClient sftp, DataWrapper dw) throws IOException {
-		//Lanzar una excepción si el tipo de socio registrado en el DataWrapper o el SFTPClient es de un tipo distinto a HITSS
 		this.cliente = sftp;
 		this.dw = dw;
 	}
@@ -87,9 +108,13 @@ public class HitssProcessor implements Processor {
 						dw.cargarLinea(3, values);
 					}
 				}
+				if( dw.procArchivoCarga(3, file_name) ) {
+					this.procesarSalida();
+				} else {
+					log.error("No se procesará salida debido a que ocurrió un error durante el proceso de entrada.");
+				}
 				br.close();
 				cliente.desconectar();
-				dw.procArchivoCarga(3, file_name);
 			}
 		} catch( SftpException ex ) {
 			ex.printStackTrace();
@@ -99,13 +124,31 @@ public class HitssProcessor implements Processor {
 	}
 
 	public boolean procesarSalida() { 
-		//Este método requiere extraer de la base de datos la información para la generación del archivo de carga para sanborns.
-		return true;
+		log.debug("Se comenzará la generación del archivo de salida.");
+		try {
+			String date_format = "yyyyMMddHHmm";
+			DateFormat df = new SimpleDateFormat(date_format);
+			df.setTimeZone(TimeZone.getTimeZone("America/Mexico_City"));
+			String date = df.format(new Date());
+			
+			String out_filename = "PSF_RespuestaRH"+date+".acc";
+			log.info("Se reportará el siguiente archivo: "+out_filename);
+
+			List<Object[]> filas = dw.selArchivoSalida(4);
+			if(!filas.isEmpty()) {
+				log.info("Se deben procesar los registros para generar el archivo.");
+			} else {
+				log.warn("No se obtuvieron registros para generar un archivo de respuesta.");
+			}
+		} catch( Exception ex ) {
+			ex.printStackTrace();
+		} finally {
+			return true;
+		}
 	}
 
 	public void release() {
 		dw.release();
 	}
-
 
 }

@@ -6,6 +6,7 @@ import javax.annotation.Resource;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.CallableStatement;
@@ -13,6 +14,8 @@ import java.sql.PreparedStatement;
 import java.sql.Types;
 
 import java.util.Properties;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.naming.InitialContext;
 import javax.naming.Context;
@@ -40,7 +43,7 @@ public class DataWrapper {
 			InitialContext ctx = new InitialContext();
 			log.debug("Se solicitará el datasource.");
 			ds = (DataSource) ctx.lookup("java:/medaDS");
-			log.info("Se obtuvo el datasource.");
+			log.debug("Se obtuvo el datasource.");
 			con = ds.getConnection();
 		} catch (NamingException ex) {
 			log.error("No se pudo obtener una instancia del DataSource configurado.");
@@ -63,7 +66,7 @@ public class DataWrapper {
 		}
 	}
 
-	public void seleccionarPrueba() throws SQLException {
+	/*public void seleccionarPrueba() throws SQLException {
 		Statement stm = null;
 		try {
 			stm = con.createStatement();
@@ -110,7 +113,7 @@ public class DataWrapper {
 			stm.close();
 			stm = null;
 		}
-	}
+	}*/
 
 	public void cargarLinea(int tipo_de_archivo, String[] values) {
 		StringBuilder sb = new StringBuilder();
@@ -145,26 +148,62 @@ public class DataWrapper {
 		}
 	}
 
-	public void procArchivoCarga(int tipo_de_archivo, String nombre_de_archivo) {
+	public boolean procArchivoCarga(int tipo_de_archivo, String nombre_de_archivo) {
+		boolean flag = false;
 		try {
-			ResultSet rs = null;
 			CallableStatement cstmt = con.prepareCall(
-				"{call procArchivoCarga(?, ?, ?)}");
-			cstmt.setInt(1, tipo_de_archivo);
+				"{? = call procArchivoCarga(?, ?, ?)}");
+			cstmt.registerOutParameter(1, Types.INTEGER);
 			cstmt.setInt(2, peer.getId());
-			cstmt.setString(3, nombre_de_archivo);
-
-			rs = cstmt.executeQuery();
-			if(!rs.isBeforeFirst()) {
+			cstmt.setInt(3, tipo_de_archivo);
+			cstmt.setString(4, nombre_de_archivo);
+			ResultSet rs = cstmt.executeQuery();
+			if(rs != null && !rs.isBeforeFirst()) {
 				log.error("No hay registros en el retorno de la ejecución del sp: procArchivoCarga");;
 			} else {
 				while(rs.next()) {
-					log.info("Se ejecuto el sp: procArchivoCarga con los siguientes resultados - ERROR: "+rs.getInt(1)+" MSG: "+rs.getString(2));
+					int error = rs.getInt(1);
+					if(error != 0)
+						log.error("ERROR: "+rs.getInt(1)+" MSG: "+rs.getString(2));
+					else
+						flag = true;
 				}
 			}
 		} catch(SQLException ex) {
 			log.error("No se pudo invocar el sp: procArchivoCarga");
 			log.error(ex.getMessage());
+		} finally {
+			return flag;
+		}
+	}
+
+	public List<Object[]> selArchivoSalida(int tipo_de_archivo) {
+		List<Object[]> file_lines = new ArrayList<Object[]>();
+		try {
+			CallableStatement cstmt = con.prepareCall(
+				"{? = call selArchivoSalida(?, ?)}");
+			cstmt.registerOutParameter(1, Types.INTEGER);
+			cstmt.setInt(2, peer.getId());
+			cstmt.setInt(3, tipo_de_archivo);
+			ResultSet rs = cstmt.executeQuery();
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int col_count = rsmd.getColumnCount();
+			if(rs != null && !rs.isBeforeFirst()) {
+				log.error("No hay registros en el retorno de la ejecución del sp: procArchivoCarga");;
+			} else {
+				while(rs.next()) {
+					Object[] a_fila = new Object[col_count];
+					for(int i = 0; i < a_fila.length; i++) {
+						a_fila[i] = rs.getObject(i+1);
+					}
+					file_lines.add(a_fila);
+				}
+			}
+		} catch(SQLException ex) {
+			log.error("No se pudo invocar el sp: selArchivoSalida");
+			log.error(ex.getMessage());
+		} finally {
+			return file_lines;
 		}
 	}
 
