@@ -20,20 +20,56 @@ public class JobCargador {
 
 	Logger log = Logger.getLogger(this.getClass());
 
-	@Schedule(second="*/30", minute="*", hour="*", persistent=false)
-	public void entradaHITSS() {
+	@Schedule(second="0", minute="*", hour="*", persistent=false)
+	public void hitssAltas() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
-	//@Schedule(second="0", minute="*/30", hour="*/4", persistent=false)
-	//@Schedule(second="*/30", minute="*", hour="*", persistent=false)
-	public void salidaHITSS() {
-		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS);
+	@Schedule(second="10", minute="*", hour="*", persistent=false)
+	public void hitssAcreditaciones() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS_ACREDITACIONES);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
+	@Schedule(second="20", minute="*", hour="*", persistent=false)
+	public void ostar() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.OSTAR);
+		proc.procesarEntrada();
+		proc.release();
+	}
+
+	@Schedule(second="30", minute="*", hour="*", persistent=false)
+	public void iave() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.IAVE);
+		proc.procesarEntrada();
+		proc.release();
+	}
+
+	@Schedule(second="40", minute="*", hour="*", persistent=false)
+	public void chedrauiIn() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.CHEDRAUI);
+		proc.procesarEntrada();
+		proc.release();
+	}
+
+	@Schedule(second="50", minute="*", hour="*", persistent=false)
+	public void chedrauiOut() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.CHEDRAUI);
+		proc.procesarSalida();
+		proc.release();
+	}
+
+
+
+
+	/*@Schedule(second="30", minute="*", hour="*", persistent=false)
+	public void hidrosina() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HIDROSINA);
+		proc.procesarEntrada();
+		proc.release();
+	}*/
 
 }

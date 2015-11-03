@@ -4,9 +4,10 @@ import org.apache.log4j.Logger;
 
 import mx.com.meda.imp.SanbornsProcessor;
 import mx.com.meda.imp.HitssProcessor;
+import mx.com.meda.imp.HitssACProcessor;
 import mx.com.meda.imp.OSTARProcessor;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.SftpException;
+import mx.com.meda.imp.IAVEProcessor;
+import mx.com.meda.imp.ChedrauiProcessor;
 
 public class ProcessorFactory {
 
@@ -19,8 +20,17 @@ public class ProcessorFactory {
 			case HITSS : 
 				procesador = new HitssProcessor();
 				break;
+			case HITSS_ACREDITACIONES : 
+				procesador = new HitssACProcessor();
+				break;
 			case OSTAR :
 				procesador = new OSTARProcessor();
+				break;
+			case IAVE :
+				procesador = new IAVEProcessor();
+				break;
+			case CHEDRAUI :
+				procesador = new ChedrauiProcessor();
 				break;
 		}
 		return procesador;

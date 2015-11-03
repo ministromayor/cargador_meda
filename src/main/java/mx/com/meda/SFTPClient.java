@@ -113,16 +113,20 @@ public class SFTPClient {
 
 
 	public String lastAddedInFileName() throws SftpException {
-		return lastAddedFileName(cfg_in_dir);
+		return lastAddedFileName(cfg_in_dir, "*");
 	}
 
-	private String lastAddedFileName(String rootRelativeDir) throws SftpException {
+	public String lastAddedInFileName(String name) throws SftpException {
+		return lastAddedFileName(cfg_in_dir, name);
+	}
+
+	private String lastAddedFileName(String rootRelativeDir, String file_name) throws SftpException {
 		String fileName = "";
 		Date recentDate = new Date(0L);
 		if(sftp.isConnected()) {
 			if(!sftp.pwd().equalsIgnoreCase(rootRelativeDir)) 
 				sftp.cd("/"+rootRelativeDir);
-			Vector<ChannelSftp.LsEntry> l_archivos = sftp.ls("*");
+			Vector<ChannelSftp.LsEntry> l_archivos = sftp.ls(file_name);
 			for(ChannelSftp.LsEntry entrada : l_archivos) {
 				SftpATTRS atrs = entrada.getAttrs();
 				Date cf_date = new Date((long)atrs.getMTime() * 1000);
@@ -140,23 +144,23 @@ public class SFTPClient {
 	}
 
 	public InputStream readLastInFile() throws SftpException {
+		return readLastInFile("*");
+	}
+
+	public InputStream readLastInFile(String name) throws SftpException {
 		InputStream is = null;
-		String lf = this.lastAddedFileName(cfg_in_dir);
+		String lf = this.lastAddedFileName(cfg_in_dir, name);
 		log.debug("Se entregará un flujo de entrada para el archivo "+lf);
 		is = sftp.get(lf);
 		return is;
 	}
 
-	public InputStream readLastOutFile() throws SftpException {
-		InputStream is = null;
-		String lf = this.lastAddedFileName(cfg_out_dir);
-		log.debug("Se entregará un flujo de entrada para el archivo "+lf);
-		is = sftp.get(lf);
-		return is;
+	public void uploadOutFile(InputStream data, String name) throws SftpException {
+		String path = this.cfg_out_dir+"/"+name;
+		log.info("Se subirá el archivo: "+path);
+		sftp.put(data, path);
 	}
-
-
-
+	
 	protected void listFiles() throws SftpException {
 		if(sftp.isConnected()) {
 			if(!sftp.pwd().equalsIgnoreCase(cfg_path)) 

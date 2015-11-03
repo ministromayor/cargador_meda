@@ -75,7 +75,8 @@ public class HitssACProcessor extends AliadoProcessor implements Processor {
 				cliente.desconectar();
 			}
 		} catch( SftpException ex ) {
-			ex.printStackTrace();
+			log.error("No se puedo procesar la entrada.");
+			log.warn(ex.getMessage());
 		} finally {
 			return true;
 		}
