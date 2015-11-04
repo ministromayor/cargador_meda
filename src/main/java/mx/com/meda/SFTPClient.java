@@ -22,7 +22,7 @@ import java.io.IOException;
 
 public class SFTPClient {
 
-	private String 	cfg_host 	= "104.214.27.52";
+	private String 	cfg_host 	= "127.0.0.1";
 	private String 	cfg_path 	= "./Entrada";
 	private int 		cfg_port 	= 22;
 	private String 	cfg_usuario = "ftpHTSptos";

@@ -32,6 +32,10 @@ public class ProcessorFactory {
 			case CHEDRAUI :
 				procesador = new ChedrauiProcessor();
 				break;
+			case SANBORNS :
+				procesador = new SanbornsProcessor();
+				break;
+
 		}
 		return procesador;
 	}

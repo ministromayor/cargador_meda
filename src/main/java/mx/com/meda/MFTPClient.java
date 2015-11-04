@@ -14,6 +14,7 @@ import java.text.ParseException;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.ftp.FTPConnectionClosedException;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -146,26 +147,41 @@ public class MFTPClient {
 	}
 
 	// de momento no tiene sentido este metodo, lo dejo para mantener la consistencia y quizá definir una interfas.
-	public InputStream readLastInFile() {
+	public InputStream readLastInFile() throws IOException {
 		return readLastInFile("*");
 	}
 
 	// este metodo si se usa y es el importante para la lectura del archivo.
 	//////////////////////////////////////////////////////////////////////
-	public InputStream readLastInFile(String name) {
+	public InputStream readLastInFile(String name) throws IOException {
 		InputStream is = null;
 		String lf = this.lastAddedFileName(cfg_in_dir, name);
-		log.debug("Se entregará un flujo de entrada para el archivo "+lf);
-		return is;
+		try {
+			is = ftp.retrieveFileStream(name);
+		} catch ( FTPConnectionClosedException ex ) {
+			log.error("No se pudo abrir un flujo de entrada desde el FTP.");
+		} finally {
+			return is;
+		}
 	}
 
 	// este metodo también es importante para subir los archivos al ftp.
 	public void uploadOutFile(InputStream data, String name) {
 		String path = this.cfg_out_dir+"/"+name;
 		log.info("Se subirá el archivo: "+path);
+		try {
+			ftp.storeFile(path, data);
+			data.close();
+		} catch( IOException ex ) {
+			log.error("No se pudo almacenar el archivo de salida del proceso.");
+			log.error(ex.getMessage());
+		}
 	}
 
 	public boolean desconectar() throws IOException {
+		if(!ftp.completePendingCommand()) {
+			log.error("La carga o descarga  del FTP fallo al cierre.");
+		}
 		ftp.logout();
 		ftp.disconnect();
 		return true;
