@@ -49,6 +49,7 @@ public class AliadoProcessor {
 	protected boolean in_trailer = false;
 	protected int in_campos = 14;
 	protected int in_t_campos = 0;
+	protected int in_h_campos = 0;
 	protected String in_nombre = "default.acc";
 
 	//Variables de configuración para los archivos de salida.
@@ -57,6 +58,7 @@ public class AliadoProcessor {
 	protected boolean out_trailer = false;
 	protected int out_campos = 0;
 	protected int out_t_campos = 0;
+	protected int out_h_campos = 0;
 	protected String out_nombre = "default.acc.out";
 
 	protected String MEDA_PROPERTIES_FILENAME = "default.properties";
@@ -66,16 +68,24 @@ public class AliadoProcessor {
 		settings.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(MEDA_PROPERTIES_FILENAME));
 
 		in_separador = settings.getProperty("in.separador");
-		in_header = new Boolean(settings.getProperty("in.header")).booleanValue();
+
 		in_trailer = new Boolean(settings.getProperty("in.trailer")).booleanValue();
+		if(in_trailer)
+			in_t_campos = new Integer(settings.getProperty("in.trailer.campos")).intValue();
+
+		in_header = new Boolean(settings.getProperty("in.header")).booleanValue();
+		if(in_header)
+			in_h_campos = new Integer(settings.getProperty("in.header.campos")).intValue();
 		in_campos = new Integer(settings.getProperty("in.campos")).intValue();
-		in_t_campos = new Integer(settings.getProperty("in.trailer.campos")).intValue();
 		in_nombre = settings.getProperty("in.nombre");
 
 		out_separador = settings.getProperty("out.separador");
 		out_header = new Boolean(settings.getProperty("out.header"));
+		if(out_header) 
+			out_h_campos = new Integer(settings.getProperty("out.header.campos")).intValue();
 		out_trailer = new Boolean(settings.getProperty("out.trailer"));
-		out_t_campos = new Integer(settings.getProperty("out.trailer.campos")).intValue();
+		if(out_trailer)
+			out_t_campos = new Integer(settings.getProperty("out.trailer.campos")).intValue();
 		out_campos = new Integer(settings.getProperty("out.campos")).intValue();
 		out_nombre = settings.getProperty("out.nombre");
 

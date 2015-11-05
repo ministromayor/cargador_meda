@@ -27,49 +27,68 @@ public class JobCargador {
 		proc.release();
 	}
 
-	@Schedule(second="10", minute="*", hour="*", persistent=false)
+	@Schedule(second="5", minute="*", hour="*", persistent=false)
 	public void hitssAcreditaciones() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS_ACREDITACIONES);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
-	@Schedule(second="20", minute="*", hour="*", persistent=false)
+	@Schedule(second="10", minute="*", hour="*", persistent=false)
 	public void ostar() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.OSTAR);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
-	@Schedule(second="30", minute="*", hour="*", persistent=false)
+	@Schedule(second="15", minute="*", hour="*", persistent=false)
 	public void iave() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.IAVE);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
-	@Schedule(second="40", minute="*", hour="*", persistent=false)
+	@Schedule(second="20", minute="*", hour="*", persistent=false)
 	public void chedrauiIn() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.CHEDRAUI);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
-	@Schedule(second="50", minute="*", hour="*", persistent=false)
+	@Schedule(second="25", minute="*", hour="*", persistent=false)
 	public void chedrauiOut() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.CHEDRAUI);
 		proc.procesarSalida();
 		proc.release();
 	}
 
+	@Schedule(second="30", minute="*", hour="*", persistent=false)
+	public void sanbornsIn() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.SANBORNS);
+		proc.procesarSalida();
+		proc.release();
+	}
 
+	@Schedule(second="35", minute="*", hour="*", persistent=false)
+	public void sanbornsOut() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.SANBORNS);
+		proc.procesarSalida();
+		proc.release();
+	}
 
+	@Schedule(second="40", minute="*", hour="*", persistent=false)
+	public void inbursa() {
+		Processor proc = ProcessorFactory.getProcessorInstance(Socio.INBURSA);
+		proc.procesarEntrada();
+		proc.release();
+	}
 
-	/*@Schedule(second="30", minute="*", hour="*", persistent=false)
+	/*@Schedule(second="40", minute="*", hour="*", persistent=false)
 	public void hidrosina() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HIDROSINA);
 		proc.procesarEntrada();
 		proc.release();
 	}*/
+
 
 }

@@ -8,6 +8,7 @@ import mx.com.meda.imp.HitssACProcessor;
 import mx.com.meda.imp.OSTARProcessor;
 import mx.com.meda.imp.IAVEProcessor;
 import mx.com.meda.imp.ChedrauiProcessor;
+import mx.com.meda.imp.InbursaProcessor;
 
 public class ProcessorFactory {
 
@@ -35,7 +36,9 @@ public class ProcessorFactory {
 			case SANBORNS :
 				procesador = new SanbornsProcessor();
 				break;
-
+			case INBURSA :
+				procesador = new InbursaProcessor();
+				break;
 		}
 		return procesador;
 	}

@@ -124,7 +124,7 @@ public class DataWrapper {
 			}
 			sb.append("?);");
 
-			String ps_material = "insert into CrgArchivos values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+			String ps_material = "insert into CrgArchivos values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 			log.debug("El material para la sentencia peparada es: "+ps_material);
 
 			PreparedStatement pstm = con.prepareStatement(ps_material);
@@ -136,7 +136,7 @@ public class DataWrapper {
 				log.debug("Estableciendo el valor del campo: "+(i+3));
 			}
 			int nulls_offset = (values.length + 3);
-			for(int i = nulls_offset; i <= 14; i++) {
+			for(int i = nulls_offset; i <= 18; i++) {
 				pstm.setNull(i, Types.VARCHAR);
 				log.debug("Estableciendo nulo el valor del campo: "+(i));
 			}
