@@ -37,7 +37,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 	}
 
 	public boolean procesarEntrada() {
-		log.info("Se comenzará la lectura del archivo de entrada.");
+		log.debug("Se comenzará la lectura del archivo de entrada.");
 		int lines = 0;
 		String[] trailer = null;
 		try {
@@ -47,7 +47,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 				BufferedReader br = new BufferedReader(new InputStreamReader(ftp_client.readLastInFile(file_name)));
 				String linea = null;	
 				while( (linea = br.readLine()) != null ) {
-					log.info(">>"+linea);
+					log.debug(">>"+linea);
 					String[] values = new String[in_campos+1];
 					values[0] = file_name;
 					log.debug("Se separará la cadena con \""+in_separador+"\"");
@@ -58,7 +58,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 						log.error("La linea ["+linea+"] contiene "+tokens.length+" elementos pero se esperaba que tuviera "+in_campos);
 						tokens = null;
 					} else if(!br.ready() && in_trailer) {
-						log.info("Se considerará la cadena "+linea+" como trailer.");
+						log.debug("Se considerará la cadena "+linea+" como trailer.");
 						trailer = tokens;
 						tokens = null;
 					} 
@@ -100,7 +100,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 						}
 						sb.append(arreglo[out_campos-1]);
 						String linea = sb.toString();
-						log.info("<<"+linea);
+						log.debug("<<"+linea);
 						escribirRespuesta(linea);
 					}
 					InputStream salida = recuperarRespuesta();
