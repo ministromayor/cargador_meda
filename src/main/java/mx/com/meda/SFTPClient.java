@@ -25,12 +25,12 @@ public class SFTPClient {
 	private String 	cfg_host 	= "127.0.0.1";
 	private String 	cfg_path 	= "./Entrada";
 	private int 		cfg_port 	= 22;
-	private String 	cfg_usuario = "ftpHTSptos";
-	private String 	cfg_password = "ftp3ntr4d4HTS";
+	private String 	cfg_usuario = "guest";
+	private String 	cfg_password = "guest";
 	private int 		cfg_timeout = 15000;
 	private String 	cfg_in_dir	= "/";
 	private String 	cfg_out_dir	= "/";
-	private String		cfg_known_hosts = "/Users/ministromayor/.ssh/known_hosts";
+	private String		cfg_known_hosts = "/etc/meda/known_hosts";
 
 	private static final String MEDA_SFTP_PROPERTIES_FILENAME = "sftp-client.properties";
 	private Logger log = Logger.getLogger(this.getClass());
