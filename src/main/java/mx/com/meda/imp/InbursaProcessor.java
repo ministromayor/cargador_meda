@@ -120,16 +120,16 @@ public class InbursaProcessor extends AliadoProcessor implements Processor {
 		DateFormat df = new SimpleDateFormat(date_format);
 		df.setTimeZone(TimeZone.getTimeZone("America/Mexico_City"));
 		String date = df.format(new Date());
-		in_nombre = "Hitss_Altas"+date+".acc";
+		in_nombre = "CARS"+date+".txt";
 		return in_nombre;
 	}
 
 	private String buildOutputFilename() {
-		String date_format = "yyyyMMddHHmm";
+		String date_format = "ddMMyyyy";
 		DateFormat df = new SimpleDateFormat(date_format);
 		df.setTimeZone(TimeZone.getTimeZone("America/Mexico_City"));
 		String date = df.format(new Date());
-		out_nombre = "PSF_RespuestaRH"+date+".acc";
+		out_nombre = "CARS"+date+"_RESP.txt";
 		log.info("Se reportará el siguiente archivo: "+out_nombre);
 		return out_nombre;
 	}

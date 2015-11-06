@@ -37,7 +37,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 	}
 
 	public boolean procesarEntrada() {
-		log.debug("Se comenzará la lectura del archivo de entrada.");
+		log.info("Se comenzará la lectura del archivo de entrada.");
 		int lines = 0;
 		String[] trailer = null;
 		try {
@@ -79,6 +79,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 		} catch( Exception ex ) {
 			log.error("No se puedo procesar la entrada.");
 			log.warn(ex.getMessage());
+			ex.printStackTrace();
 		} finally {
 			return true;
 		}
@@ -104,6 +105,7 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 					}
 					InputStream salida = recuperarRespuesta();
 					ftp_client.uploadOutFile(salida, out_filename);
+					log.debug("Se almacenó el archivo en el servidor FTP.");
 				} else {
 					log.warn("No se obtuvieron registros para generar un archivo de respuesta.");
 				}

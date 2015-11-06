@@ -20,7 +20,7 @@ public class JobCargador {
 
 	Logger log = Logger.getLogger(this.getClass());
 
-	@Schedule(second="0", minute="*", hour="*", persistent=false)
+	/*@Schedule(second="0", minute="*", hour="*", persistent=false)
 	public void hitssAltas() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HITSS);
 		proc.procesarEntrada();
@@ -60,30 +60,30 @@ public class JobCargador {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.CHEDRAUI);
 		proc.procesarSalida();
 		proc.release();
-	}
+	}*/
 
-	@Schedule(second="30", minute="*", hour="*", persistent=false)
+	/*@Schedule(second="30", minute="*", hour="*", persistent=false)
 	public void sanbornsIn() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.SANBORNS);
-		proc.procesarSalida();
+		proc.procesarEntrada();
 		proc.release();
-	}
+	}*/
 
-	@Schedule(second="35", minute="*", hour="*", persistent=false)
+	@Schedule(second="*/30", minute="*", hour="*", persistent=false)
 	public void sanbornsOut() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.SANBORNS);
 		proc.procesarSalida();
 		proc.release();
 	}
 
-	@Schedule(second="40", minute="*", hour="*", persistent=false)
+	/*@Schedule(second="40", minute="*", hour="*", persistent=false)
 	public void inbursa() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.INBURSA);
 		proc.procesarEntrada();
 		proc.release();
 	}
 
-	/*@Schedule(second="40", minute="*", hour="*", persistent=false)
+	@Schedule(second="40", minute="*", hour="*", persistent=false)
 	public void hidrosina() {
 		Processor proc = ProcessorFactory.getProcessorInstance(Socio.HIDROSINA);
 		proc.procesarEntrada();

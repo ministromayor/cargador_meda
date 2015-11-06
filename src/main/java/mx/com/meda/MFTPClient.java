@@ -14,6 +14,7 @@ import java.text.ParseException;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPConnectionClosedException;
 
 import java.io.InputStream;
@@ -21,6 +22,7 @@ import java.io.IOException;
 
 public class MFTPClient {
 
+	private boolean	download		= false;
 	private String 	cfg_host 	= "127.0.0.1";
 	private String 	cfg_path 	= "./Entrada";
 	private int 		cfg_port 	= 21;
@@ -83,20 +85,24 @@ public class MFTPClient {
 	}
 	
 	public boolean conectar() {
+		log.debug("Se iniciará la conexión al servidor FTP.");
 		boolean flag = false;
 
 		ftp = new FTPClient();
-		FTPClientConfig config = new FTPClientConfig();
-		ftp.configure(config);
+		//FTPClientConfig config = new FTPClientConfig();
+		//ftp.configure(config);
 
 		boolean error = false;
 		try {
 			int reply;
+			log.debug("Se conectará al host: "+cfg_host+":"+cfg_port);
 			ftp.connect(cfg_host, cfg_port);
 			reply = ftp.getReplyCode();
 			if(!FTPReply.isPositiveCompletion(reply)) {
 				ftp.disconnect();
 				log.error("El servidor "+cfg_host+" rechazó la conexión. ("+reply+").");
+			} else {
+				log.debug("Se realizó la conexión al servidor FTP.");
 			}
       } catch(IOException ex) {
 			if (ftp.isConnected()) {
@@ -110,19 +116,22 @@ public class MFTPClient {
 
 		//evitar el espaguetti.
 		try {
+			log.debug("Inicia la autenticación al servidor FTP.");
 			if (!ftp.login(cfg_usuario, cfg_password)) {
 				ftp.logout();
 				log.error("Fallo la autenticación con el FTP.");
 			} else {
-				log.debug("Ahora la sesión se encuentra conectada.");
+				ftp.setFileType(FTP.ASCII_FILE_TYPE);
+				log.debug("Ahora la sesión se encuentra conectada en modo pasivo con el puerto: "+ftp.getPassivePort());
 				flag = true;
 			}
 		} catch(IOException ex) {
 			try{ 
 				ftp.logout();
 				ftp.disconnect();
-			} catch(IOException f) { }
-			log.error("No se pudo completar la conexión con el ftp.");
+			} catch(IOException f) { } finally {
+				log.error("No se pudo completar la conexión con el ftp.");
+			}
 		}
 		//hacerlo mas efectivo.
 		return flag;
@@ -156,10 +165,18 @@ public class MFTPClient {
 	public InputStream readLastInFile(String name) throws IOException {
 		InputStream is = null;
 		String lf = this.lastAddedFileName(cfg_in_dir, name);
+		log.info("Se abrira el archivo: "+lf);
 		try {
-			is = ftp.retrieveFileStream(name);
+			log.debug("Se está trabajando en el directorio: "+ftp.printWorkingDirectory());
+			/*if(!ftp.printWorkingDirectory().equals(cfg_in_dir)) {
+				ftp.changeWorkingDirectory(cfg_in_dir);
+				log.debug("Se está trabajando en el directorio: "+ftp.printWorkingDirectory());
+			}*/
+			is = ftp.retrieveFileStream(lf);
+			download = true;
 		} catch ( FTPConnectionClosedException ex ) {
 			log.error("No se pudo abrir un flujo de entrada desde el FTP.");
+			log.error(ex.getMessage());
 		} finally {
 			return is;
 		}
@@ -179,7 +196,7 @@ public class MFTPClient {
 	}
 
 	public boolean desconectar() throws IOException {
-		if(!ftp.completePendingCommand()) {
+		if(download && !ftp.completePendingCommand()) {
 			log.error("La carga o descarga  del FTP fallo al cierre.");
 		}
 		ftp.logout();
