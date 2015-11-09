@@ -45,7 +45,7 @@ public class ChedrauiProcessor extends AliadoProcessor implements Processor {
 				BufferedReader br = new BufferedReader(new InputStreamReader(cliente.readLastInFile(file_name)));
 				String linea = null;	
 				while( (linea = br.readLine()) != null ) {
-					log.info(">>"+linea);
+					log.debug(">>"+linea);
 					String[] values = new String[in_campos+1];
 					values[0] = file_name;
 					log.debug("Se separará la cadena con \""+in_separador+"\"");
@@ -56,7 +56,7 @@ public class ChedrauiProcessor extends AliadoProcessor implements Processor {
 						log.error("La linea ["+linea+"] contiene "+tokens.length+" elementos pero se esperaba que tuviera "+in_campos);
 						tokens = null;
 					} else if(!br.ready() && in_trailer) {
-						log.info("Se considerará la cadena "+linea+" como trailer.");
+						log.debug("TRAILER: "+linea);
 						trailer = tokens;
 						tokens = null;
 					} 
@@ -83,22 +83,42 @@ public class ChedrauiProcessor extends AliadoProcessor implements Processor {
 	}
 
 	public boolean procesarSalida() {
-		log.debug("Se comenzará la generación del archivo de salida.");
 		try {
+			String out_filename = buildOutputFilename();
+			log.debug("Se comenzará la generación del archivo de salida ("+out_filename+").");
 			if(cliente.conectar()) {
-				String out_filename = buildOutputFilename();
 				List<Object[]> filas = dw.selArchivoSalida(TipoDeArchivo.RESPUESTA_TICKETS.getId());
 				if(!filas.isEmpty()) {
+					int numero_de_registros = filas.size();
+					double monto = 0.00;
 					for(Object[] arreglo : filas) {
 						StringBuilder sb = new StringBuilder();
 						for(int i = 0; i < (out_campos-1); i++) {
 							sb.append(arreglo[i]);
 							sb.append("|");
+							// El campo 2 (indice 1) contiene los puntos que serán cargados.
+							if(i == 1) {
+								try {
+									double ptos = Double.parseDouble((arreglo[i]).toString());
+									log.debug("Se sumarán "+ptos+" al socio: " + arreglo[2]);
+									monto+=ptos;
+								} catch(NumberFormatException ex) {
+									log.error("El campo Puntos del registro no contiene un número.");
+									log.debug(ex.getMessage());
+								}
+							}
 						}
 						sb.append(arreglo[out_campos-1]);
 						String linea = sb.toString();
-						log.info("<<"+linea);
+						log.debug("<<"+linea);
 						escribirRespuesta(linea);
+					}
+					String string_trailer = buildTrailer(numero_de_registros, monto);
+					if(string_trailer != null && string_trailer.length() > 0) {
+						log.debug("Se devolverá el trailer: "+string_trailer);
+						escribirRespuesta(string_trailer);
+					}else {
+						log.error("Ocurrio un error al generar el trailer.");
 					}
 					InputStream salida = recuperarRespuesta();
 					cliente.uploadOutFile(salida, out_filename);
@@ -109,11 +129,35 @@ public class ChedrauiProcessor extends AliadoProcessor implements Processor {
 			}
 		} catch( SftpException ex ) {
 			log.error("Error al abrir o cerrar la conexión con el sftp.");
-			log.error(ex.getMessage());
+			log.debug(ex.getMessage());
 		} finally {
 			return true;
 		}
 	}
+
+	private String buildTrailer(int registros, double monto) {
+		String date_format = "ddMMyyyy";
+		DateFormat df = new SimpleDateFormat(date_format);
+		df.setTimeZone(TimeZone.getTimeZone("America/Mexico_City"));
+		String date = df.format(new Date());
+
+		StringBuilder sb = new StringBuilder();
+		//Numero de registros en el archivo.
+		sb.append(registros);
+		sb.append("|");
+		//Fecha de recepción.
+		sb.append(date+"|");
+		//Total puntos
+		sb.append(monto);
+		sb.append("|");
+		//Identificador.
+		sb.append("CDI");
+	
+		String trailer = sb.toString();
+		return trailer;
+	}
+
+
 
 	private String buildInputFilename() {
 		String date_format = "ddMMyyyy";

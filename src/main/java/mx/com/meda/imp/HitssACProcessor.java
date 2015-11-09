@@ -45,7 +45,7 @@ public class HitssACProcessor extends AliadoProcessor implements Processor {
 				BufferedReader br = new BufferedReader(new InputStreamReader(cliente.readLastInFile(file_name)));
 				String linea = null;	
 				while( (linea = br.readLine()) != null ) {
-					log.info(">>"+linea);
+					log.debug(">>"+linea);
 					String[] values = new String[in_campos+1];
 					values[0] = file_name;
 					log.debug("Se separará la cadena con \""+in_separador+"\"");
@@ -56,7 +56,7 @@ public class HitssACProcessor extends AliadoProcessor implements Processor {
 						log.error("La linea ["+linea+"] contiene "+tokens.length+" elementos pero se esperaba que tuviera "+in_campos);
 						tokens = null;
 					} else if(!br.ready() && in_trailer) {
-						log.info("Se considerará la cadena "+linea+" como trailer.");
+						log.debug("TRAILER: "+linea);
 						trailer = tokens;
 						tokens = null;
 					} 
@@ -67,12 +67,12 @@ public class HitssACProcessor extends AliadoProcessor implements Processor {
 					}
 				}
 				if( validarTrailer(trailer, lines) && dw.procArchivoCarga(TipoDeArchivo.RECIBE_ACREDITACIONES.getId(), file_name) ) {
+					cliente.desconectar();
 					this.procesarSalida();
 				} else {
 					log.error("No se procesará salida debido a que ocurrió un error durante el proceso de entrada.");
 				}
 				br.close();
-				cliente.desconectar();
 			}
 		} catch( SftpException ex ) {
 			log.error("No se puedo procesar la entrada.");
@@ -83,33 +83,88 @@ public class HitssACProcessor extends AliadoProcessor implements Processor {
 	}
 
 	public boolean procesarSalida() {
-		log.debug("Se comenzará la generación del archivo de salida.");
 		try {
 			String out_filename = buildOutputFilename();
-			List<Object[]> filas = dw.selArchivoSalida(TipoDeArchivo.RESPUESTA_ACRETIDACIONES.getId());
-			if(!filas.isEmpty()) {
-				for(Object[] arreglo : filas) {
-					StringBuilder sb = new StringBuilder();
-					for(int i = 0; i < (out_campos-1); i++) {
-						sb.append(arreglo[i]);
-						sb.append("|");
+			log.debug("Se comenzará la generación del archivo de salida ("+out_filename+")");
+			if(cliente.conectar()) {
+				List<Object[]> filas = dw.selArchivoSalida(TipoDeArchivo.RESPUESTA_ACRETIDACIONES.getId());
+				if(!filas.isEmpty()) {
+					int numero_de_registros = filas.size();
+					int puntos = 0;
+
+					for(Object[] arreglo : filas) {
+						StringBuilder sb = new StringBuilder();
+						for(int i = 0; i < (out_campos-1); i++) {
+							sb.append(arreglo[i]);
+							sb.append("|");
+							// El campo 3 (indice 2) contiene los puntos que serán cargados.
+							if(i == 2) {
+								try {
+									int ptos = Integer.parseInt((arreglo[i]).toString());
+									log.debug("Se sumarán "+ptos+" al socio: " + arreglo[0]);
+									puntos+=ptos;
+								} catch(NumberFormatException ex) {
+									log.error("El campo Puntos del registro no contiene un número.");
+									log.debug(ex.getMessage());
+								}
+							}
+						}
+						sb.append(arreglo[out_campos-1]);
+						String linea = sb.toString();
+						log.debug("<<"+linea);
+						escribirRespuesta(linea);
 					}
-					sb.append(arreglo[out_campos-1]);
-					String linea = sb.toString();
-					log.info("<<"+linea);
-					escribirRespuesta(linea);
+					String string_trailer = buildTrailer(numero_de_registros, numero_de_registros, puntos);
+					if(string_trailer != null && string_trailer.length() > 0) {
+						log.debug("Se devolverá el trailer: "+string_trailer);
+						escribirRespuesta(string_trailer);
+					}else {
+						log.error("Ocurrio un error al generar el trailer.");
+					}
+					InputStream salida = recuperarRespuesta();
+					cliente.uploadOutFile(salida, out_filename);
+				} else {
+					log.warn("No se obtuvieron registros para generar un archivo de respuesta.");
 				}
-				InputStream salida = recuperarRespuesta();
-				cliente.uploadOutFile(salida, out_filename);
-			} else {
-				log.warn("No se obtuvieron registros para generar un archivo de respuesta.");
+				cliente.desconectar();
 			}
-		} catch( Exception ex ) {
-			ex.printStackTrace();
+		} catch( SftpException ex ) {
+			log.error("Error al abrir o cerrar la conexión con el sftp.");
+			log.debug(ex.getMessage());
 		} finally {
 			return true;
 		}
 	}
+
+	private String buildTrailer(int registros, int procesados, int puntos) {
+		String date_format = "ddMMyyyy";
+		DateFormat df = new SimpleDateFormat(date_format);
+		df.setTimeZone(TimeZone.getTimeZone("America/Mexico_City"));
+		String date = df.format(new Date());
+
+		StringBuilder sb = new StringBuilder();
+		//Identificador
+		sb.append("TRL|");
+		//Numero de registros en el archivo.
+		sb.append(registros);
+		sb.append("|");
+		//Fecha de recepción.
+		sb.append(date+"|");
+		//Fecha de procesamiento.
+		sb.append(date+"|");
+		//Número de registros procesados.
+		sb.append(procesados);
+		sb.append("|");
+		//Total puntos
+		sb.append(puntos);
+		sb.append("|");
+		//Identificador.
+		sb.append("HTS");
+	
+		String trailer = sb.toString();
+		return trailer;
+	}
+
 
 	private String buildInputFilename() {
 		String date_format = "ddMMyyyy";
@@ -139,7 +194,7 @@ public class HitssACProcessor extends AliadoProcessor implements Processor {
 			} else {
 				flag = false;
 			}
-			log.info("El trailer es: "+ (flag ? "Valido" : "Erroneo") +" para "+registros+" registros.");
+			log.debug("El trailer es: "+ (flag ? "Valido" : "Erroneo") +" para "+registros+" registros.");
 		} else {
 			flag = true;
 		}

@@ -86,22 +86,42 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 	}
 
 	public boolean procesarSalida() {
-		log.debug("Se comenzará la generación del archivo de salida.");
 		try {
+			String out_filename = buildOutputFilename();
+			log.debug("Se comenzará la generación del archivo de salida.");
 			if(ftp_client.conectar()) {
-				String out_filename = buildOutputFilename();
 				List<Object[]> filas = dw.selArchivoSalida(TipoDeArchivo.RESPUESTA_TICKETS.getId());
 				if(!filas.isEmpty()) {
+					int numero_de_registros = filas.size();
+					int monto = 0;
 					for(Object[] arreglo : filas) {
 						StringBuilder sb = new StringBuilder();
 						for(int i = 0; i < (out_campos-1); i++) {
 							sb.append(arreglo[i]);
 							sb.append("|");
+							// El campo 6 (indice 5) contiene los puntos que serán cargados.
+							if(i == 5) {
+								try {
+									double ptos = Double.parseDouble((arreglo[i]).toString());
+									log.debug("Se sumarán "+ptos+" al socio: " + arreglo[7]);
+									monto+=ptos;
+								} catch(NumberFormatException ex) {
+									log.error("El campo Puntos del registro no contiene un número.");
+									log.debug(ex.getMessage());
+								}
+							}
 						}
 						sb.append(arreglo[out_campos-1]);
 						String linea = sb.toString();
 						log.debug("<<"+linea);
 						escribirRespuesta(linea);
+					}
+					String string_trailer = buildTrailer(numero_de_registros, monto);
+					if(string_trailer != null && string_trailer.length() > 0) {
+						log.debug("Se devolverá el trailer: "+string_trailer);
+						escribirRespuesta(string_trailer);
+					}else {
+						log.error("Ocurrio un error al generar el trailer.");
 					}
 					InputStream salida = recuperarRespuesta();
 					ftp_client.uploadOutFile(salida, out_filename);
@@ -118,6 +138,31 @@ public class SanbornsProcessor extends AliadoProcessor implements Processor {
 			return true;
 		}
 	}
+
+	private String buildTrailer(int registros, int monto) {
+		String date_format = "ddMMyyyy";
+		DateFormat df = new SimpleDateFormat(date_format);
+		df.setTimeZone(TimeZone.getTimeZone("America/Mexico_City"));
+		String date = df.format(new Date());
+
+		StringBuilder sb = new StringBuilder();
+		//Numero de registros en el archivo.
+		sb.append(String.format("%010d", new Integer(registros)));
+		sb.append("|");
+		//Fecha de recepción.
+		sb.append(date+"|");
+		//Total puntos
+		sb.append(String.format("%012d", new Integer(monto)));
+		sb.append("|");
+		//Identificador.
+		sb.append("SNB");
+	
+		String trailer = sb.toString();
+		return trailer;
+	}
+
+
+
 
 	private String buildInputFilename() {
 		String date_format = "ddMMyyyy";

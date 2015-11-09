@@ -45,7 +45,7 @@ public class HitssProcessor extends AliadoProcessor implements Processor {
 				BufferedReader br = new BufferedReader(new InputStreamReader(cliente.readLastInFile(file_name)));
 				String linea = null;	
 				while( (linea = br.readLine()) != null ) {
-					log.info(">>"+linea);
+					log.debug(">>"+linea);
 					String[] values = new String[in_campos+1];
 					values[0] = file_name;
 					log.debug("Se separará la cadena con \""+in_separador+"\"");
@@ -56,7 +56,7 @@ public class HitssProcessor extends AliadoProcessor implements Processor {
 						log.error("La linea ["+linea+"] contiene "+tokens.length+" elementos pero se esperaba que tuviera "+in_campos);
 						tokens = null;
 					} else if(!br.ready() && in_trailer) {
-						log.info("Se considerará la cadena "+linea+" como trailer.");
+						log.info("TRAILER= "+linea);
 						trailer = tokens;
 						tokens = null;
 					} 
@@ -83,9 +83,9 @@ public class HitssProcessor extends AliadoProcessor implements Processor {
 	}
 
 	public boolean procesarSalida() {
-		log.debug("Se comenzará la generación del archivo de salida.");
 		try {
 			String out_filename = buildOutputFilename();
+			log.debug("Se comenzará la generación del archivo de salida ("+out_filename+")");
 			List<Object[]> filas = dw.selArchivoSalida(TipoDeArchivo.RESPUESTA_ALTAS.getId());
 			if(!filas.isEmpty()) {
 				for(Object[] arreglo : filas) {
@@ -96,7 +96,7 @@ public class HitssProcessor extends AliadoProcessor implements Processor {
 					}
 					sb.append(arreglo[out_campos-1]);
 					String linea = sb.toString();
-					log.info("<<"+linea);
+					log.debug("<<"+linea);
 					escribirRespuesta(linea);
 				}
 				InputStream salida = recuperarRespuesta();
@@ -139,7 +139,7 @@ public class HitssProcessor extends AliadoProcessor implements Processor {
 			} else {
 				flag = false;
 			}
-			log.info("El trailer es: "+ (flag ? "Valido" : "Erroneo") +" para "+registros+" registros.");
+			log.debug("El trailer es: "+ (flag ? "Valido" : "Erroneo") +" para "+registros+" registros.");
 		} else {
 			flag = true;
 		}

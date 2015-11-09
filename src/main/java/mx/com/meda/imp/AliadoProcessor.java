@@ -121,6 +121,7 @@ public class AliadoProcessor {
 		try {
 			if(bos != null) {
 					byte[] linea_bytes = linea.getBytes();
+					log.debug("Se escribirán "+linea_bytes.length+" bytes en el flujo de salida.");
 					bos.write(linea_bytes, 0, linea_bytes.length);
 					bos.write(endline, 0, endline.length);
 					flag = true;
@@ -139,7 +140,9 @@ public class AliadoProcessor {
 		InputStream r_is = null;
 		try {
 			if(bos != null) {
+				log.debug("Se limpiará el canal outputstream de salida.");
 				bos.flush();
+				log.debug("Se cerrará el canal outputstream de salida.");
 				bos.close();
 				r_is = pis;
 			} else {
